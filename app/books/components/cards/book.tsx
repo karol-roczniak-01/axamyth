@@ -26,10 +26,10 @@ const Book: React.FC<BookProps> = ({
         </CardTitle>
       </CardHeader>
       <CardFooter className="gap-2 text-muted-foreground">
-        <CalendarDays size={16}/>
-        <span className="text-sm">
+        <div className="flex gap-2 items-center text-sm">
+          <CalendarDays size={16}/>
           {formatCreationTime(creationTime)}
-        </span>
+        </div>
       </CardFooter>      
     </Card>
    );

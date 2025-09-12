@@ -97,4 +97,36 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
+  
+  /* Scrollbar styling */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+  
+  /* Webkit scrollbar styling for Chrome, Safari, Edge */
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--color-border);
+    border-radius: var(--radius-sm);
+    border: none;
+  }
+
+  
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  
+  /* Hide scrollbar arrows */
+  *::-webkit-scrollbar-button {
+    display: none;
+  }
 }

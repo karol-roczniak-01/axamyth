@@ -4,7 +4,7 @@ export const components = {
   h3: (props: any) => <h3 className="text-xl font-serif font-medium mb-4" {...props} />,
   h4: (props: any) => <h3 className="text-lg font-serif font-medium mb-2" {...props} />,
 
-  p: (props: any) => <p className="mb-4 indent-8 text-justify font-serif-secondary text-foreground/70 leading-relaxed md:text-lg text-base" {...props} />,
+  p: (props: any) => <p className="indent-8 text-justify font-serif-secondary text-foreground/70 leading-relaxed md:text-lg text-base" {...props} />,
   
   ul: (props: any) => <ul className="list-disc list-inside mb-4" {...props} />,
   ol: (props: any) => <ol className="list-decimal list-inside mb-4" {...props} />,

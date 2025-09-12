@@ -5,11 +5,11 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Book, BookUser, EllipsisVertical, Loader, Plus, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
-import AllBooks from "./components/all-books";
-import UserBooks from "./components/user-books";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import AllBooks from "./components/grids/all-books";
+import UserBooks from "./components/grids/user-books";
 
 interface PageContentProps {
   userId: string;
@@ -72,7 +72,7 @@ const PageContent: React.FC<PageContentProps> = ({ userId }) => {
       if (newUrl !== window.location.href) {
         router.replace(newUrl, { scroll: false });
       }
-    }, 300);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [searchInput, viewMode, router]);
@@ -100,17 +100,21 @@ const PageContent: React.FC<PageContentProps> = ({ userId }) => {
             
       {/* Search - Fixed */}
       <div className="w-full flex justify-center border-b sticky z-10">
-        <div className="max-w-2xl w-full flex gap-2 relative p-4">
-          <Search 
-            className="absolute top-[29px] left-[32px] text-muted-foreground"
-            size={18}
-          />
-          <Input
-            className="rounded-full h-11 px-4 pl-12 text-base"
-            placeholder="Find a book..."
-            value={searchInput}
-            onChange={handleInputChange}
-          />
+        <div className={`${viewMode === 'user' && 'justify-end'} max-w-2xl w-full flex gap-2 relative p-4`}>
+          {viewMode === 'all' && (
+            <>
+              <Search 
+                className="absolute top-[29px] left-[32px] text-muted-foreground"
+                size={18}
+              />
+              <Input
+                className="rounded-full h-11 px-4 pl-12 text-base"
+                placeholder="Find a book..."
+                value={searchInput}
+                onChange={handleInputChange}
+              />
+            </>
+          )}
           {viewMode === 'user' && (
             <Button 
               className="h-11 rounded-full [&_svg:not([class*='size-'])]:size-5"
@@ -157,10 +161,11 @@ const PageContent: React.FC<PageContentProps> = ({ userId }) => {
           {viewMode === 'all' ? (
             <AllBooks searchTerm={debouncedSearch} />
           ) : (
-            <UserBooks userId={userId} searchTerm={debouncedSearch} />
+            <UserBooks userId={userId} />
           )}
         </div>
       </div>
+      
     </div>
   );
 };

@@ -9,88 +9,90 @@ import { useDebounce } from "use-debounce";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import { githubDarkInit } from '@uiw/codemirror-theme-github';
-import { Loader } from "lucide-react";
+import { Loader, Trash, Trash2, X } from "lucide-react";
 import { MDXRemote } from 'next-mdx-remote';
 import { serialize } from 'next-mdx-remote/serialize';
 import type { MDXRemoteSerializeResult } from 'next-mdx-remote';
 import { components } from "../mdx-components";
-import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 const EditBookChapter = () => {
-  const { isOpen, bookId, chapterId, closeDialog } = useEditChapter();
+  const { isOpen, chapterId, closeDialog } = useEditChapter();
   const [content, setContent] = useState("");
+  const [originalContent, setOriginalContent] = useState("");
+  const [hasUserEdited, setHasUserEdited] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [lastSavedContent, setLastSavedContent] = useState("");
-  const [isInitialized, setIsInitialized] = useState(false);
   const [mdxSource, setMdxSource] = useState<MDXRemoteSerializeResult | null>(null);
-  const [isProcessingMdx, setIsProcessingMdx] = useState(false);
+  const [lastLoadedChapterId, setLastLoadedChapterId] = useState<string | null>(null);
      
   const bookChapter = useQuery(
     api.bookChapterFunctions.getBookChapterById, 
     chapterId ? { chapterId: chapterId as Id<"bookChapters"> } : "skip"
   );
   const updateChapter = useMutation(api.bookChapterFunctions.updateBookChapterContent);
-  const deleteChapter = useMutation(api.bookChapterFunctions.deleteBookChapter)
+  const deleteChapter = useMutation(api.bookChapterFunctions.deleteBookChapter);
+  const updateChapterTitle = useMutation(api.bookChapterFunctions.updateBookChapterTitle);
 
-  // Debounce the content for saving
+  // Always debounce content, but only save if user has edited
   const [debouncedContent] = useDebounce(content, 1000);
-  
-  // Debounce the content for MDX processing (longer delay to avoid too many updates)
-  const [debouncedContentForMdx] = useDebounce(content, 1000);
 
-  // Initialize content when chapter data loads (only once per chapter)
+  // Reset state when dialog closes
   useEffect(() => {
-    if (bookChapter?.content !== undefined && chapterId && !isInitialized) {
-      setContent(bookChapter.content);
-      setLastSavedContent(bookChapter.content);
-      setIsInitialized(true);
+    if (!isOpen) {
+      setContent("");
+      setOriginalContent("");
+      setHasUserEdited(false);
+      setIsSaving(false);
+      setMdxSource(null);
+      setLastLoadedChapterId(null);
     }
-  }, [bookChapter?.content, chapterId, isInitialized]);
+  }, [isOpen]);
 
-  // Reset initialization when chapter changes
+  // Load content when chapter loads (only if it's a new chapter or content changed)
   useEffect(() => {
-    setIsInitialized(false);
-    setContent(""); // Clear old content immediately
-    setLastSavedContent("");
-    setMdxSource(null);
-  }, [chapterId]);
+    if (
+      isOpen && 
+      bookChapter?.content !== undefined && 
+      chapterId &&
+      (lastLoadedChapterId !== chapterId || originalContent !== bookChapter.content)
+    ) {
+      setContent(bookChapter.content);
+      setOriginalContent(bookChapter.content);
+      setHasUserEdited(false);
+      setLastLoadedChapterId(chapterId);
+    }
+  }, [bookChapter?.content, chapterId, isOpen, lastLoadedChapterId, originalContent]);
 
-  // Process MDX when debounced content changes
+  // Process MDX for preview
   useEffect(() => {
     const processMdx = async () => {
-      if (debouncedContentForMdx && isInitialized) {
-        setIsProcessingMdx(true);
+      if (content && isOpen) {
         try {
-          const mdxSource = await serialize(debouncedContentForMdx, {
-            mdxOptions: {
-              remarkPlugins: [],
-              rehypePlugins: [],
-            },
-          });
+          const mdxSource = await serialize(content);
           setMdxSource(mdxSource);
         } catch (error) {
           console.error("Failed to process MDX:", error);
-          // On error, you might want to show the raw content or an error message
           setMdxSource(null);
-        } finally {
-          setIsProcessingMdx(false);
         }
+      } else {
+        setMdxSource(null);
       }
     };
-
     processMdx();
-  }, [debouncedContentForMdx, isInitialized]);
+  }, [content, isOpen]);
 
-  // Save when debounced content changes
+  // Auto-save only when user has made changes
   useEffect(() => {
     const saveContent = async () => {
       if (
         chapterId &&
-        isInitialized &&
-        debouncedContent !== lastSavedContent &&
+        hasUserEdited &&
+        debouncedContent !== originalContent &&
         !isSaving &&
-        debouncedContent !== ""
+        isOpen // Only save when dialog is open
       ) {
         try {
           setIsSaving(true);
@@ -98,7 +100,7 @@ const EditBookChapter = () => {
             chapterId: chapterId as Id<"bookChapters">,
             content: debouncedContent
           });
-          setLastSavedContent(debouncedContent);
+          setOriginalContent(debouncedContent); // Update what we consider "saved"
         } catch (error) {
           console.error("Failed to save chapter:", error);
         } finally {
@@ -108,7 +110,7 @@ const EditBookChapter = () => {
     };
 
     saveContent();
-  }, [debouncedContent, chapterId, updateChapter, lastSavedContent, isInitialized, isSaving]);
+  }, [debouncedContent, chapterId, updateChapter, originalContent, hasUserEdited, isSaving, isOpen]);
 
   const handleDelete = useCallback(async () => {
     if (chapterId && !isDeleting) {
@@ -119,120 +121,168 @@ const EditBookChapter = () => {
         });
         closeDialog();
       } catch (error) {
-        console.error("Failed to delete chapter:", error)
+        console.error("Failed to delete chapter:", error);
       } finally {
         setIsDeleting(false);
       }
     }
-  }, [chapterId, deleteChapter, closeDialog, isDeleting])
+  }, [chapterId, deleteChapter, closeDialog, isDeleting]);
 
-  // Handle content changes
+  const handleSaveTitle = async (e: React.FormEvent<HTMLInputElement>) => {
+    const newTitle = e.currentTarget.value.trim();
+    if (newTitle && newTitle !== bookChapter?.title) {
+      await updateChapterTitle({
+        chapterId: chapterId as Id<"bookChapters">,
+        title: newTitle
+      });
+    }
+    setIsEditingTitle(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur();
+    }
+  };
+
   const handleContentChange = useCallback((value: string) => {
     setContent(value);
+    setHasUserEdited(true); // Mark that user has made changes
   }, []);
-
+  
   const onChange = (open: boolean) => {
     if (!open) {
       closeDialog();
-      setContent("")
     }
   };
+
+  // Show loading state while waiting for chapter data
+  const isLoading = isOpen && chapterId && (!bookChapter || lastLoadedChapterId !== chapterId);
 
   return (
     <Dialog open={isOpen} onOpenChange={onChange}>
       <DialogContent className="flex md:hidden z-100">
         <DialogHeader>
-          <DialogTitle>
-            Open on Desktop please!
-          </DialogTitle>
+          <DialogTitle>Open on Desktop please!</DialogTitle>
         </DialogHeader>
       </DialogContent>
-      <DialogContent className="h-dvh w-dvw gap-0 min-w-full rounded-none border-none p-0 flex-col items-center hidden md:flex">
+      
+      <DialogContent className="h-dvh w-dvw gap-0 min-w-full rounded-none border-none p-0 flex-col items-center hidden md:flex focus:outline-none focus:ring-0">        
+        <VisuallyHidden>
+          <DialogTitle>
+            Edit Chapter
+          </DialogTitle>
+        </VisuallyHidden>
+      
+        <DialogHeader className="border-b w-full p-4 flex items-start">
+          <Button 
+            variant="link" 
+            className="top-4 left-4"
+            disabled={Boolean(isSaving || isLoading)}
+            onClick={closeDialog}
+          >
+            <X />
+             Close
+          </Button>
+        </DialogHeader>
+        
         <div className="grid grid-cols-2 w-full max-w-7xl flex-1 border-x min-h-0">
           <div className="border-r overflow-hidden flex flex-col">
+            <div className="border-b px-3">
+              {isEditingTitle ? (
+                <input
+                  placeholder="Enter title here..."
+                  autoFocus
+                  defaultValue={bookChapter?.title}
+                  onBlur={handleSaveTitle}
+                  onKeyDown={handleKeyDown}
+                  className="h-8 text-sm font-mono px-0 dark:bg-transparent rounded-none border-0 focus:outline-none focus:ring-0 focus-visible:ring-0"
+                />
+              ) : (
+                <p 
+                  className="h-8 text-sm hover:text-muted-foreground transition flex items-center font-mono cursor-pointer"
+                  onClick={() => setIsEditingTitle(true)}
+                >
+                  {bookChapter?.title}
+                </p>
+              )}
+            </div>
             <div className="flex-1 overflow-auto">
-              <CodeMirror
-                value={content}
-                onChange={handleContentChange}
-                lang="markdown"
-                style={{
-                  fontSize: 16
-                }}
-                extensions={[
-                  markdown(),
-                  EditorView.lineWrapping
-                ]}
-                theme={githubDarkInit({
-                  settings: {
-                    background: "#1f1f1f",
-                    gutterBackground: "#1f1f1f",
-                  }
-                })}
-                height="100%"
-                className="w-full h-full"
-              />
+              {isLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <Loader className="animate-spin" />
+                </div>
+              ) : (
+                <CodeMirror
+                  value={content}
+                  onChange={handleContentChange}
+                  extensions={[markdown(), EditorView.lineWrapping]}
+                  theme={githubDarkInit({
+                    settings: {
+                      
+                      background: "#1f1f1f",
+                      gutterBackground: "#1f1f1f",
+                    }
+                  })}
+                  style={{ fontSize: 16 }}
+                  height="100%"
+                  className="w-full h-full"
+                />
+              )}
             </div>
           </div>
+          
           <div className="overflow-hidden flex flex-col">
             <div className="flex-1 overflow-auto p-6">
-              {mdxSource && (
-                <div className="prose prose-sm max-w-none">
-                  <MDXRemote {...mdxSource} components={components} />
+              {isLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <Loader className="animate-spin" />
                 </div>
+              ) : (
+                mdxSource && (
+                  <div className="prose prose-sm max-w-none">
+                    <MDXRemote {...mdxSource} components={components} />
+                  </div>
+                )
               )}
             </div>
           </div>
         </div>
-        <DialogFooter className="border-t p-4 w-full max-w-7xl border-x flex-shrink-0">
-          {isSaving && (
-            <Button
-              className="w-9 pointer-events-none"
-              variant="ghost"
-            >
-              <Loader className="animate-spin"/>
-            </Button>
-          )}
-          <AlertDialog>
-            <AlertDialogTrigger>
-              <Button
-                variant="secondary"
-                disabled={isDeleting || isSaving}
-              >
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  Are you sure?
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  Once deleted, this chapter and its content will be gone forever. You won&apos;t be able to recover it.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <DialogFooter>
-                <AlertDialogCancel className="border-none">
-                  Cancel
-                </AlertDialogCancel>
-                <Button
-                  variant="destructive"
+        
+        <DialogFooter className="border-t p-4 w-full">
+          <div className="max-w-7xl mx-auto w-full flex">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="secondary" 
+                  disabled={Boolean(isSaving || isLoading)}
                 >
+                  <Trash2 />
                   Delete
                 </Button>
-              </DialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <Button 
-            variant="secondary"
-            onClick={closeDialog}
-            disabled={isSaving}
-          >
-            Close
-          </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Are you sure?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Once deleted, this chapter and its content will be gone forever.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="border-none">Cancel</AlertDialogCancel>
+                  <Button variant="destructive" onClick={handleDelete}>
+                    Delete
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
- 
+
 export default EditBookChapter;

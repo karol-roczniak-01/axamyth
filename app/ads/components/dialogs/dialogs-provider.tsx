@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import EditBookChapter from "./dialogs/edit-book-chapter";
+import EditAd from "./edit-ad";
+import EditTarget from "./edit-target";
 
-export const BookDialogsProvider: React.FC = () => {
+export const DialogsProvider: React.FC = () => {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -16,7 +17,8 @@ export const BookDialogsProvider: React.FC = () => {
   
   return (
     <>
-      <EditBookChapter />
+      <EditAd />
+      <EditTarget />
     </>
   );
 };

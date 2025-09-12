@@ -41,6 +41,18 @@ export const createBookChapter = mutation({
   }
 });
 
+export const updateBookChapterTitle = mutation({
+  args: {
+    chapterId: v.id("bookChapters"),
+    title: v.string()
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.chapterId, {
+      title: args.title
+    })
+  }
+})
+
 export const updateBookChapterContent = mutation({
   args: {
     chapterId: v.id("bookChapters"),

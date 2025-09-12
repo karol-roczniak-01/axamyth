@@ -5,6 +5,10 @@ export default defineSchema({
   books: defineTable({
     userId: v.string(),
     title: v.string(),
+    ads: v.optional(v.array(v.object({
+      id: v.id("ads"),
+      amount: v.number()
+    })))
   })
   .searchIndex("by_title", {
     searchField: "title",
@@ -20,4 +24,17 @@ export default defineSchema({
     searchField: "title",
     staged: false
   }),
+
+  ads: defineTable({
+    userId: v.string(),
+    type: v.string(),
+    layout: v.string(),
+    title: v.string(),
+    description: v.string(),
+    price: v.optional(v.number()),
+    buttonText: v.string(),
+    buttonUrl: v.string(),
+    imagePath: v.optional(v.string()),
+    public: v.boolean(),
+  })
 })

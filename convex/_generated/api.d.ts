@@ -13,8 +13,10 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as adFunctions from "../adFunctions.js";
 import type * as bookChapterFunctions from "../bookChapterFunctions.js";
 import type * as bookFunctions from "../bookFunctions.js";
+import type * as storageFunctions from "../storageFunctions.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -25,8 +27,10 @@ import type * as bookFunctions from "../bookFunctions.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  adFunctions: typeof adFunctions;
   bookChapterFunctions: typeof bookChapterFunctions;
   bookFunctions: typeof bookFunctions;
+  storageFunctions: typeof storageFunctions;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

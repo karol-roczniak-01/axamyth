@@ -35,23 +35,18 @@ export const getAllUserBooks = query({
   },
 });
 
-export const getUserBooksByTitle = query({
+export const getUserBooks = query({
   args: {
     userId: v.string(),
-    title: v.string(),
-    paginationOpts: paginationOptsValidator
   },
   handler: async (ctx, args) => {
     const userBooks = await ctx.db
       .query("books")
-      .withSearchIndex("by_title", (q) => 
-        q.search("title", args.title)
-      )
       .filter((q) => q.eq(q.field("userId"), args.userId))
-      .paginate(args.paginationOpts)
+      .collect()
 
     return userBooks;
-  },
+  }
 });
 
 export const getBookById = query({
@@ -76,7 +71,7 @@ export const createBook = mutation({
   }
 });
 
-export const updateBookTitle = mutation({
+export const editBook = mutation({
   args: {
     bookId: v.id("books"),
     title: v.string()

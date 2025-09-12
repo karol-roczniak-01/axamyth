@@ -9,19 +9,28 @@ const PageContent = () => {
   const services = [
     {
       name: "Books", 
-      href: "/books"
+      href: "/books",
+      enabled: true
+    },
+    {
+      name: "Ads",
+      href: "/ads",
+      enabled: true
     },
     {
       name: "Truths",
-      href: "/truths"
+      href: "/truths",
+      enabled: false
     },
     {
       name: "Research",
-      href: "/research"
+      href: "/research",
+      enabled: false
     },
     {
       name: "Settings",
-      href: "/settings"
+      href: "/settings",
+      enabled: false
     }
   ];
 
@@ -48,9 +57,16 @@ const PageContent = () => {
             <h1
               key={index}
               onClick={() => router.push(service.href)}
-              className="text-4xl font-semibold font-serif cursor-pointer hover:text-muted-foreground transition"
+              className={`
+                ${!service.enabled && 'text-muted-foreground pointer-events-none'} 
+                text-4xl font-semibold font-serif cursor-pointer hover:text-muted-foreground transition`}
             >
               {service.name}
+              {!service.enabled && (
+                <span className="text-xs font-normal pl-2">
+                  (soon)
+                </span>
+              )}
             </h1>
           ))}
         </div>

@@ -1,20 +1,19 @@
 "use client";
 
+import SmallBook from "@/app/books/components/cards/small-book";
+import SmallBookSkeleton from "@/app/books/components/cards/small-book-skeleton";
 import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import { usePaginatedQuery } from "convex/react";
-import Book from "./cards/book";
-import { useRouter } from "next/navigation";
-import BookSkeleton from "./cards/book-skeleton";
 
-interface AllBooksProps {
+interface TargetBooksProps {
   searchTerm: string;
 }
 
-const AllBooks: React.FC<AllBooksProps> = ({ searchTerm }) => {
-  const router = useRouter();
-  
-  const numberOfBooks = 12;
+const TargetBooks: React.FC<TargetBooksProps> = ({
+  searchTerm
+}) => {
+  const numberOfBooks = 6;
 
   const { results, status, loadMore } = usePaginatedQuery(
     api.bookFunctions.getBooksByTitle,
@@ -25,32 +24,27 @@ const AllBooks: React.FC<AllBooksProps> = ({ searchTerm }) => {
   // Create array of skeletons based on numberOfBooks
   const renderSkeletons = () => {
     return Array.from({ length: numberOfBooks }, (_, index) => (
-      <BookSkeleton key={`skeleton-${index}`} />
+      <SmallBookSkeleton key={`skeleton-${index}`} />
     ));
   };
 
-  return (
-    <div className="flex flex-col gap-8">
+  return ( 
+    <div className="flex flex-col gap-4">
       {/* Results */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="flex flex-col gap-4">
         {status === 'LoadingFirstPage' ? (
-          // Show skeletons while loading initial data
           renderSkeletons()
         ) : (
           <>
             {results?.map((book) => (
-              <Book 
+              <SmallBook 
                 key={book._id}
                 title={book.title}
-                creationTime={book._creationTime}
-                onClick={() => router.push(`/books/${book._id}`)}
+                onClick={() => {}}
               />
             ))}
             {status === 'LoadingMore' && (
-              // Show skeletons when loading more
-              Array.from({ length: numberOfBooks }, (_, index) => (
-                <BookSkeleton key={`loading-more-${index}`} />
-              ))
+              renderSkeletons()
             )}
           </>
         )}
@@ -70,20 +64,20 @@ const AllBooks: React.FC<AllBooksProps> = ({ searchTerm }) => {
       )}
 
       {/* No Results */}
-      {results?.length === 0 && searchTerm && (
-        <span className="text-center text-muted-foreground">
+      {results?.length === 0 && searchTerm && (status !== "LoadingMore" && status !== "LoadingFirstPage") && (
+        <span className="text-center text-sm text-muted-foreground">
           No books found for "{searchTerm}"
         </span>
       )}
 
       {/* Empty State */}
       {!searchTerm && (
-        <span className="text-center text-muted-foreground">
+        <span className="text-center text-sm text-muted-foreground">
           Enter a title in the search to find results
         </span>
       )}
     </div>
-  );
-};
-
-export default AllBooks;
+   );
+}
+ 
+export default TargetBooks;
