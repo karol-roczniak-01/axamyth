@@ -1,6 +1,7 @@
 import PageContent from "./page-content";
 
-export default function Home() {
+export default async function Home() {
+
   return (
     <PageContent />
   );

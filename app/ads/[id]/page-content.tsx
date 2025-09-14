@@ -13,13 +13,15 @@ import { useEditTarget } from "../hooks/use-edit-target";
 interface PageContentProps {
   id: string;
   preloadedAd: Preloaded<typeof api.adFunctions.getAdById>;
-  isOwner: boolean;
+  userId: string;
+  userEmail: string;
 };
 
 const PageContent: React.FC<PageContentProps> = ({
   id,
   preloadedAd,
-  isOwner
+  userId,
+  userEmail
 }) => {
   const router = useRouter();
   const ad = usePreloadedQuery(preloadedAd)
@@ -51,7 +53,7 @@ const PageContent: React.FC<PageContentProps> = ({
               <Button
                 className="w-8 h-8"
                 variant="ghost"
-                onClick={() => editTarget.openDialog(ad?._id || '')}
+                onClick={() => editTarget.openDialog(userId, userEmail, id)}
               >
                 <Pen />
               </Button>

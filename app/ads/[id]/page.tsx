@@ -3,6 +3,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { preloadQuery } from "convex/nextjs";
 import PageContent from "./page-content";
 import { DialogsProvider } from "../components/dialogs/dialogs-provider";
+import { withAuth } from "@workos-inc/authkit-nextjs";
 
 export default async function Ad({
   params
@@ -14,8 +15,7 @@ export default async function Ad({
     adId: id as Id<"ads">
   });
 
-  // Use real WorkOS user id and conver userId
-  const isOwner = true
+  const { user } = await withAuth();
 
   return (
     <>
@@ -23,7 +23,8 @@ export default async function Ad({
       <PageContent 
         id={id}
         preloadedAd={preloadedAd}
-        isOwner={isOwner}
+        userId={user?.id!}
+        userEmail={user?.email!}
       />
     </>
   )

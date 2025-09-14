@@ -9,7 +9,13 @@ import { Input } from "@/components/ui/input";
 import { useBuyAd } from "../../hooks/use-buy-ad";
 
 const EditTarget = () => {
-  const { isOpen, adId, closeDialog } = useEditTarget();
+  const { 
+    isOpen, 
+    userId, 
+    userEmail, 
+    adId, 
+    closeDialog 
+  } = useEditTarget();
   const buyAd = useBuyAd();
    
   // Search states (no URL updates)
@@ -39,11 +45,11 @@ const EditTarget = () => {
 
   // Why onChange is not resetting correclty and need this useEffect? (TODO)
   useEffect(() => {
-     if (isOpen) {
-       setSearchInput("");
-       setDebouncedSearch("");
-     }
-   }, [isOpen]);
+    if (isOpen) {
+      setSearchInput("");
+      setDebouncedSearch("");
+    }
+  }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onChange}>
@@ -81,7 +87,7 @@ const EditTarget = () => {
               </div>
               <TargetBooks 
                 searchTerm={debouncedSearch}
-                onClick={() => buyAd.openDialog(adId || '')}
+                onClick={() => buyAd.openDialog(userId!, userEmail!, adId!, )}
               />
             </div>
 
