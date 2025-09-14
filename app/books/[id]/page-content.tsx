@@ -4,13 +4,12 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Preloaded, useMutation, usePreloadedQuery, useQuery } from "convex/react";
-import { ArrowLeft, Dot, Ellipsis, Loader, Pen, Plus, Settings, Trash } from "lucide-react";
+import { ArrowLeft, Dot, Loader, Pen, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useEditChapter } from "../hooks/use-edit-chapter";
 import { useReadBook } from "../hooks/use-read-book";
 import { formatCreationTime } from "@/lib/utils";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useEditBook } from "../hooks/use-edit-book";
 
 interface PageContentProps {

@@ -8,10 +8,12 @@ import { usePaginatedQuery } from "convex/react";
 
 interface TargetBooksProps {
   searchTerm: string;
+  onClick: () => void;
 }
 
 const TargetBooks: React.FC<TargetBooksProps> = ({
-  searchTerm
+  searchTerm,
+  onClick
 }) => {
   const numberOfBooks = 6;
 
@@ -40,7 +42,7 @@ const TargetBooks: React.FC<TargetBooksProps> = ({
               <SmallBook 
                 key={book._id}
                 title={book.title}
-                onClick={() => {}}
+                onClick={onClick}
               />
             ))}
             {status === 'LoadingMore' && (

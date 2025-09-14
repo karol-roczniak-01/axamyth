@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import EditAd from "./edit-ad";
 import EditTarget from "./edit-target";
+import BuyAd from "./buy-ad";
 
 export const DialogsProvider: React.FC = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -19,6 +20,7 @@ export const DialogsProvider: React.FC = () => {
     <>
       <EditAd />
       <EditTarget />
+      <BuyAd />
     </>
   );
 };

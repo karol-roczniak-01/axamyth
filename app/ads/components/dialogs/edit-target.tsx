@@ -6,10 +6,12 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useCallback, useEffect, useState } from "react";
 import TargetBooks from "../grids/target-books";
 import { Input } from "@/components/ui/input";
+import { useBuyAd } from "../../hooks/use-buy-ad";
 
 const EditTarget = () => {
   const { isOpen, adId, closeDialog } = useEditTarget();
-  
+  const buyAd = useBuyAd();
+   
   // Search states (no URL updates)
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -26,14 +28,24 @@ const EditTarget = () => {
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchInput(e.target.value)
   }, [])
-  
+
   const onChange = (open: boolean) => {
     if (!open) {
+      setSearchInput("");
+      setDebouncedSearch("");
       closeDialog();
     }
   };
 
-  return ( 
+  // Why onChange is not resetting correclty and need this useEffect? (TODO)
+  useEffect(() => {
+     if (isOpen) {
+       setSearchInput("");
+       setDebouncedSearch("");
+     }
+   }, [isOpen]);
+
+  return (
     <Dialog open={isOpen} onOpenChange={onChange}>
       <DialogContent className="h-dvh gap-0 min-w-full rounded-none border-none p-0 flex flex-col items-center">
         <DialogHeader className="p-4 items-start flex w-full">
@@ -43,12 +55,13 @@ const EditTarget = () => {
             </DialogTitle>
           </VisuallyHidden>
           <Button 
-            variant="link" 
+            variant="link"
             onClick={closeDialog}
           >
             <X />
             Close
-          </Button>              
+          </Button>
+                    
         </DialogHeader>
         <div className="flex-1 w-full flex justify-center border-y">
           <div className="w-full h-full max-w-6xl grid grid-cols-2">
@@ -66,21 +79,25 @@ const EditTarget = () => {
                   onChange={handleInputChange}
                 />
               </div>
-              <TargetBooks searchTerm={debouncedSearch} />
+              <TargetBooks 
+                searchTerm={debouncedSearch}
+                onClick={() => buyAd.openDialog(adId || '')}
+              />
             </div>
 
             {/* Right panel - Current books */}
             <div>
-
+             
             </div>
           </div>
         </div>
         <DialogFooter className="p-4 w-full max-w-2xl">
-
+         
         </DialogFooter>
       </DialogContent>
     </Dialog>
-   );
+   
+);
 }
- 
+
 export default EditTarget;
